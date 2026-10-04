@@ -24,7 +24,7 @@ const METRICS = {
 
   total_volume: { desc: 'total_volume', unit: 'm³', capability: 'meter_water' },
   target_volume: { desc: 'target_volume', unit: 'm³', capability: 'meter_water.target', triggerOnChange: 'meter_water.target_changed' },
-  flow_actual: { desc: 'flow_actual', unit: 'L/min', capability: 'measure_water', scale: M3H_TO_LMIN },
+  flow_actual: { desc: 'flow_actual', unit: 'L/min', capability: 'measure_water', scale: M3H_TO_LMIN, triggerOnChange: 'measure_water.actual_changed' },
 
   max_flow_day: { desc: 'max_flow_day', unit: 'L/min', capability: 'measure_water.max_flow_day', scale: M3H_TO_LMIN },
   max_flow_month: { desc: 'max_flow_month', unit: 'L/min', capability: 'measure_water.max_flow_month', scale: M3H_TO_LMIN },

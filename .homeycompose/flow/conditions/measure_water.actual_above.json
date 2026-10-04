@@ -1,0 +1,27 @@
+{
+  "title": {
+    "en": "Actual flow !{{is|is not}} above",
+    "sv": "Aktuellt flöde !{{är|är inte}} över"
+  },
+  "titleFormatted": {
+    "en": "Actual flow !{{is|is not}} above [[flow]] L/min",
+    "sv": "Aktuellt flöde !{{är|är inte}} över [[flow]] L/min"
+  },
+  "args": [
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=wimbib"
+    },
+    {
+      "type": "number",
+      "name": "flow",
+      "min": 0,
+      "step": 0.1,
+      "placeholder": {
+        "en": "L/min",
+        "sv": "L/min"
+      }
+    }
+  ]
+}

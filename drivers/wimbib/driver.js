@@ -39,12 +39,16 @@ module.exports = class WimbibDriver extends Homey.Driver {
       'alarm_water.dry_true',
       'alarm_water.reverse_true',
       'meter_water.target_changed',
+      'measure_water.actual_changed',
     ];
 
     for (const triggerId of triggerIds) {
       this.homey.flow.getTriggerCard(triggerId)
         .registerRunListener(async (args, state) => args.device.getData().id === state.device.getData().id);
     }
+
+    this.homey.flow.getConditionCard('measure_water.actual_above')
+      .registerRunListener(async args => args.device.getCapabilityValue('measure_water') > args.flow);
   }
 
   handleDiscoveryResult(discoveryResult) {
