@@ -11,6 +11,9 @@ const MAX_FAILED_POLLS = 3;
 // Hourly meter readings kept for the dashboard widget
 const HISTORY_HOURS = 24;
 
+// Litres used between two meter readings in m³
+const toLitres = (from, to) => Math.max(0, Math.round((to - from) * 1000));
+
 // m³/h -> L/min, the unit Homey uses for measure_water
 const M3H_TO_LMIN = 1000 / 60;
 
@@ -185,18 +188,46 @@ module.exports = class WimbibDevice extends Homey.Device {
       await this.setStoreValue('hourly', hourly.slice(-HISTORY_HOURS));
     }
 
+    // Local calendar periods, e.g. "2026-10-05" and "2026-10"
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: this.homey.clock.getTimezone() }).format(now);
-    const dayStart = this.getStoreValue('dayStart');
-    if (!dayStart || dayStart.date !== today) {
-      await this.setStoreValue('dayStart', { date: today, v: total });
+    const yesterday = new Date(`${today}T00:00:00Z`);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    const lastMonth = new Date(`${today.slice(0, 7)}-01T00:00:00Z`);
+    lastMonth.setUTCMonth(lastMonth.getUTCMonth() - 1);
+
+    await this.rollPeriod('day', today, yesterday.toISOString().slice(0, 10), total);
+    await this.rollPeriod('month', today.slice(0, 7), lastMonth.toISOString().slice(0, 7), total);
+  }
+
+  /**
+   * Stores the meter reading at the start of a day or month. When a new period starts,
+   * the use of the one that just ended is kept as "previous". A period is partial when
+   * its start wasn't seen, e.g. right after install or when Homey was off at midnight.
+   */
+  async rollPeriod(name, current, previous, total) {
+    const start = this.getStoreValue(`${name}Start`);
+    if (start && start.period === current) {
+      return;
     }
+
+    const continuous = start != null && start.period === previous;
+    const ended = continuous
+      ? { period: previous, litres: toLitres(start.v, total), partial: !!start.partial }
+      : null;
+
+    await this.setStoreValue(`${name}Previous`, ended);
+    await this.setStoreValue(`${name}Start`, { period: current, v: total, partial: !continuous });
   }
 
   getWidgetData() {
     const total = this.getCapabilityValueOrNull('meter_water');
-    const dayStart = this.getStoreValue('dayStart');
     const hourly = this.getStoreValue('hourly') || [];
-    const toLitres = (from, to) => Math.max(0, Math.round((to - from) * 1000));
+    const sinceStart = (name) => {
+      const start = this.getStoreValue(`${name}Start`);
+      return typeof total === 'number' && start && start.v != null
+        ? { period: start.period, litres: toLitres(start.v, total), partial: !!start.partial }
+        : null;
+    };
 
     return {
       id: this.getData().id,
@@ -204,7 +235,10 @@ module.exports = class WimbibDevice extends Homey.Device {
       available: this.getAvailable(),
       lastUpdate: this.lastUpdate || null,
       total,
-      todayLitres: typeof total === 'number' && dayStart ? toLitres(dayStart.v, total) : null,
+      today: sinceStart('day'),
+      yesterday: this.getStoreValue('dayPrevious'),
+      month: sinceStart('month'),
+      lastMonth: this.getStoreValue('monthPrevious'),
       flow: this.getCapabilityValueOrNull('measure_water'),
       maxFlowDay: this.getCapabilityValueOrNull('measure_water.max_flow_day'),
       wifiRssi: this.getCapabilityValueOrNull('measure_signal_strength.wifi'),

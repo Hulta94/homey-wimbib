@@ -28,11 +28,22 @@
       .wm-side { display: grid; justify-items: end; gap: 2px; text-align: right; }
       .wm-total { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 15px; font-variant-numeric: tabular-nums; }
       .wm-total .red { color: var(--wm-bad); }
-      .wm-chart { display: flex; align-items: flex-end; gap: 2px; height: 64px; border-bottom: 1px solid var(--wm-line); }
-      .wm-chart i { flex: 1; min-height: 1px; background: var(--wm-accent); border-radius: 2px 2px 0 0; opacity: 0.85; }
-      .wm-chart i.zero { background: var(--wm-line); opacity: 1; }
-      .wm-chart i.now { opacity: 0.45; }
-      .wm-ticks { display: flex; justify-content: space-between; font-size: 10px; color: var(--wm-muted); margin-top: -6px; font-variant-numeric: tabular-nums; }
+
+      .wm-periods { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+      .wm-period { display: grid; gap: 1px; padding: 6px 8px; border-radius: 8px; background: var(--wm-line); min-width: 0; }
+      .wm-period b { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .wm-period b small { font-size: 11px; font-weight: 500; color: var(--wm-muted); margin-left: 2px; }
+      .wm-period span { font-size: 11px; color: var(--wm-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      .wm-chart { display: flex; align-items: stretch; gap: 1px; height: 92px; border-bottom: 1px solid var(--wm-line); }
+      .wm-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 2px; }
+      .wm-col em { font-style: normal; font-size: 9px; line-height: 1; color: var(--wm-muted); font-variant-numeric: tabular-nums; writing-mode: vertical-rl; transform: rotate(180deg); }
+      .wm-col.peak em { color: var(--wm-text); font-weight: 600; }
+      .wm-col i { display: block; width: 100%; max-width: 12px; background: var(--wm-accent); border-radius: 2px 2px 0 0; opacity: 0.85; }
+      .wm-col i.zero { background: var(--wm-line); opacity: 1; }
+      .wm-col.now i { opacity: 0.45; }
+      .wm-hours { display: flex; gap: 1px; margin-top: -6px; }
+      .wm-hours span { flex: 1; min-width: 0; text-align: center; font-size: 9px; color: var(--wm-muted); font-variant-numeric: tabular-nums; }
       .wm-foot { font-size: 11px; color: var(--wm-muted); }
       .wm-empty { font-size: 13px; color: var(--wm-muted); text-align: center; padding: 40px 8px; }
     </style>
@@ -40,22 +51,24 @@
 
   <body class="homey-widget">
     <div class="wm" id="wm">
-      <div class="wm-empty" id="empty">…</div>
+      <div class="wm-empty">…</div>
     </div>
 
     <script type="text/javascript">
       const TEXT = {
         en: {
-          today: 'used today', since: 'since midnight', flow: 'Flow', maxFlow: 'Max flow today',
+          today: 'used today', flow: 'Flow', maxFlow: 'Max flow today',
+          yesterday: 'Yesterday', thisMonth: 'This month', lastMonth: 'Last month', partial: 'partial',
           online: 'Online', offline: 'Offline', noDevice: 'Add a wimbib device to see your water use.',
-          noData: 'Waiting for the first reading…', updated: 'Updated', hours: 'Last 24 h',
+          noData: 'Hourly use appears after the first full hour.', updated: 'Updated', perHour: 'L per hour',
           alarm: { leak: 'Leak alarm', burst: 'Burst alarm', dry: 'Dry alarm', reverse: 'Reverse flow' },
           signal: { good: 'Good Wi-Fi', fair: 'Fair Wi-Fi', weak: 'Weak Wi-Fi', poor: 'Poor Wi-Fi' },
         },
         sv: {
-          today: 'förbrukat idag', since: 'sedan midnatt', flow: 'Flöde', maxFlow: 'Maxflöde idag',
+          today: 'förbrukat idag', flow: 'Flöde', maxFlow: 'Maxflöde idag',
+          yesterday: 'Igår', thisMonth: 'Denna månad', lastMonth: 'Förra månaden', partial: 'ofullständig',
           online: 'Ansluten', offline: 'Ej ansluten', noDevice: 'Lägg till en wimbib-enhet för att se din vattenförbrukning.',
-          noData: 'Väntar på första avläsningen…', updated: 'Uppdaterad', hours: 'Senaste 24 h',
+          noData: 'Förbrukning per timme visas efter första hela timmen.', updated: 'Uppdaterad', perHour: 'L per timme',
           alarm: { leak: 'Läcklarm', burst: 'Spricklarm', dry: 'Torrlarm', reverse: 'Backflöde' },
           signal: { good: 'Bra Wi-Fi', fair: 'Okej Wi-Fi', weak: 'Svag Wi-Fi', poor: 'Dålig Wi-Fi' },
         },
@@ -65,8 +78,11 @@
       let device = null;
 
       const root = document.getElementById('wm');
-      const fmt = (n, d) => n == null ? '–' : Number(n).toLocaleString(lang === 'sv' ? 'sv-SE' : 'en-GB', { minimumFractionDigits: d, maximumFractionDigits: d });
-      const clock = (ms) => new Date(ms).toLocaleTimeString(lang === 'sv' ? 'sv-SE' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
+      const locale = () => (lang === 'sv' ? 'sv-SE' : 'en-GB');
+      const fmt = (n, d) => n == null ? '–' : Number(n).toLocaleString(locale(), { minimumFractionDigits: d, maximumFractionDigits: d });
+      const clock = (ms) => new Date(ms).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
+      const hour = (ms) => new Date(ms).toLocaleTimeString(locale(), { hour: '2-digit' }).replace(/\D/g, '');
+      const monthName = (period) => period ? new Date(period + '-01T12:00:00Z').toLocaleDateString(locale(), { month: 'long' }) : '';
       const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
       function signal(rssi) {
@@ -84,10 +100,12 @@
         return { cls: 'ok', text: t.online };
       }
 
-      function litres(l) {
-        if (l == null) return '–';
-        if (l >= 1000) return fmt(l / 1000, 2) + '<small>m³</small>';
-        return fmt(l, 0) + '<small>L</small>';
+      // Volume with unit; a partial period (not seen from its start) is shown as "at least"
+      function volume(p) {
+        if (!p || p.litres == null) return '–';
+        const prefix = p.partial ? '≥ ' : '';
+        if (p.litres >= 1000) return prefix + fmt(p.litres / 1000, 2) + '<small>m³</small>';
+        return prefix + fmt(p.litres, 0) + '<small>L</small>';
       }
 
       function register(total) {
@@ -96,16 +114,23 @@
         return whole + '.<span class="red">' + dec + '</span> m³';
       }
 
+      function period(label, p, sub) {
+        const title = p && p.partial ? ' title="' + t.partial + '"' : '';
+        return '<div class="wm-period"' + title + '><b>' + volume(p) + '</b><span>' + esc(sub || label) + '</span></div>';
+      }
+
       function chart(hourly) {
         const max = Math.max(1, ...hourly.map((h) => h.litres));
-        const bars = hourly.map((h, i) => {
-          const pct = (h.litres / max) * 100;
-          const cls = h.litres === 0 ? 'zero' : (i === hourly.length - 1 ? 'now' : '');
-          return '<i class="' + cls + '" style="height:' + Math.max(2, pct) + '%" title="' + clock(Date.parse(h.t)) + ' · ' + h.litres + ' L"></i>';
+        const peak = hourly.reduce((a, b) => (b.litres > a.litres ? b : a), hourly[0]);
+        const cols = hourly.map((h, i) => {
+          const cls = 'wm-col' + (i === hourly.length - 1 ? ' now' : '') + (h === peak && h.litres > 0 ? ' peak' : '');
+          const height = Math.max(2, (h.litres / max) * 62);
+          return '<div class="' + cls + '" title="' + clock(Date.parse(h.t)) + ' · ' + h.litres + ' L">'
+            + '<em>' + h.litres + '</em>'
+            + '<i class="' + (h.litres === 0 ? 'zero' : '') + '" style="height:' + height + 'px"></i></div>';
         }).join('');
-        const first = hourly.length ? clock(Date.parse(hourly[0].t)) : '';
-        return '<div class="wm-chart">' + bars + '</div>'
-          + '<div class="wm-ticks"><span>' + first + '</span><span>' + t.hours + '</span><span>' + clock(Date.now()) + '</span></div>';
+        const hours = hourly.map((h, i) => '<span>' + (i % 3 === 0 ? hour(Date.parse(h.t)) : '') + '</span>').join('');
+        return '<div class="wm-chart" aria-label="' + t.perHour + '">' + cols + '</div><div class="wm-hours">' + hours + '</div>';
       }
 
       function render() {
@@ -118,14 +143,20 @@
         const flowRow = d.flow != null
           ? t.flow + ' ' + fmt(d.flow, 1) + ' L/min'
           : (d.maxFlowDay != null ? t.maxFlow + ' ' + fmt(d.maxFlowDay, 1) + ' L/min' : '');
+        const hourly = (d.hourly || []).slice(-24);
 
         root.innerHTML = ''
           + '<div class="wm-head"><span class="wm-name">' + esc(d.name) + '</span><span class="wm-status ' + s.cls + '">' + esc(s.text) + '</span></div>'
           + '<div class="wm-main">'
-          + '<div class="wm-today"><span class="wm-big">' + litres(d.todayLitres) + '</span><span class="wm-label">' + t.today + '</span></div>'
+          + '<div class="wm-today"><span class="wm-big">' + volume(d.today) + '</span><span class="wm-label">' + t.today + '</span></div>'
           + '<div class="wm-side"><span class="wm-total">' + register(d.total) + '</span><span class="wm-label">' + flowRow + '</span></div>'
           + '</div>'
-          + (d.hourly && d.hourly.length ? chart(d.hourly) : '<div class="wm-empty" style="padding:20px 8px">' + t.noData + '</div>')
+          + '<div class="wm-periods">'
+          + period(t.yesterday, d.yesterday)
+          + period(t.thisMonth, d.month, d.month && monthName(d.month.period))
+          + period(t.lastMonth, d.lastMonth, d.lastMonth && monthName(d.lastMonth.period))
+          + '</div>'
+          + (hourly.length > 1 ? chart(hourly) : '<div class="wm-empty" style="padding:20px 8px">' + t.noData + '</div>')
           + '<div class="wm-foot"><span>' + (d.lastUpdate ? t.updated + ' ' + clock(d.lastUpdate) : '') + '</span><span>' + signal(d.wifiRssi) + '</span></div>';
       }
 

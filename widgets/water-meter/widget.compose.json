@@ -3,7 +3,7 @@
     "en": "Water meter",
     "sv": "Vattenmätare"
   },
-  "height": 220,
+  "height": 300,
   "settings": [],
   "api": {
     "getData": {
