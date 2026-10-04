@@ -1,6 +1,8 @@
 'use strict';
 
 const Homey = require('homey');
+const got = require('got');
+
 
 module.exports = class WimbibDriver extends Homey.Driver {
 
@@ -25,6 +27,24 @@ module.exports = class WimbibDriver extends Homey.Driver {
       this.log('got discovery result:', discoveryResult);
       this.handleDiscoveryResult(discoveryResult);
     });
+
+    this.registerFlowTriggers();
+  }
+
+  // App-level trigger cards (.homeycompose/flow/triggers) with a device argument,
+  // fired from WimbibDevice with the device in the state
+  registerFlowTriggers() {
+    const triggerIds = [
+      'alarm_water.burst_true',
+      'alarm_water.dry_true',
+      'alarm_water.reverse_true',
+      'meter_water.target_changed',
+    ];
+
+    for (const triggerId of triggerIds) {
+      this.homey.flow.getTriggerCard(triggerId)
+        .registerRunListener(async (args, state) => args.device.getData().id === state.device.getData().id);
+    }
   }
 
   handleDiscoveryResult(discoveryResult) {
@@ -55,7 +75,7 @@ module.exports = class WimbibDriver extends Homey.Driver {
 
       try {
         this.address = data.wimbibAddress;
-        const deviceInfo = getDeviceInfo();
+        const deviceInfo = await this.getDeviceInfo();
         return deviceInfo;
       } catch (error) {
         this.error(error);
@@ -83,31 +103,5 @@ module.exports = class WimbibDriver extends Homey.Driver {
     const response = await got(url);
     const deviceInfo = JSON.parse(response.body);
     return deviceInfo;
-  }
-
-
-  async readMeterData() {
-    const url = `http://${this.address}/meterData`;
-    console.log('fetching data from:', url);
-
-    let responseBody = '';
-
-    try {
-      const response = await got(url);
-      responseBody = response.body;
-    } catch (error) {
-      console.error('Error caught while getting meterData', error);
-    }
-
-    const meterData = JSON.parse(responseBody);
-
-    if (meterData == null) {
-      console.error(`Unable to parse meterData json from body: ${responseBody}`);
-    }
-
-    const retval = {
-    };
-
-    return retval;
   }
 };

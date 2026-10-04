@@ -1,0 +1,47 @@
+{
+  "desc": {
+    "leak_alarm": "Läcklarm",
+    "burst_alarm": "Spricklarm",
+    "dry_alarm": "Torrlarm",
+    "reverse_alarm": "Backflödeslarm",
+
+    "total_volume": "Total volym",
+    "target_volume": "Målvolym",
+    "flow_actual": "Aktuellt flöde",
+
+    "max_flow_day": "Maxflöde dag",
+    "max_flow_month": "Maxflöde månad",
+    "max_flow_year": "Maxflöde år",
+
+    "min_flow_day": "Minflöde dag",
+    "min_flow_month": "Minflöde månad",
+
+    "volume_weighted_water_temp_day": "Volymviktad vattentemperatur dag",
+    "volume_weighted_water_temp_month": "Volymviktad vattentemperatur månad",
+
+    "max_water_temp_day": "Max vattentemperatur dag",
+    "max_water_temp_month": "Max vattentemperatur månad",
+    "max_water_temp_year": "Max vattentemperatur år",
+
+    "min_water_temp_day": "Min vattentemperatur dag",
+    "min_water_temp_month": "Min vattentemperatur månad",
+    "min_water_temp_year": "Min vattentemperatur år",
+
+    "time_weighted_meter_temp_day": "Tidsviktad mätartemperatur dag",
+
+    "max_meter_temp_month": "Max mätartemperatur månad",
+    "max_meter_temp_year": "Max mätartemperatur år",
+
+    "min_meter_temp_day": "Min mätartemperatur dag",
+    "min_meter_temp_month": "Min mätartemperatur månad",
+    "min_meter_temp_year": "Min mätartemperatur år",
+
+    "instantaneous_flow_temp": "Momentan vattentemperatur",
+
+    "wifi_rssi": "Wi-Fi RSSI",
+    "wmbus_rssi": "wM-Bus RSSI"
+  },
+  "error": {
+    "unreachable": "Kan inte nå wimbib"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "highlight": true,
+  "title": {
+    "en": "Reverse alarm",
+    "sv": "Backflödeslarm"
+  },
+  "args": [
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=wimbib"
+    }
+  ]
+}

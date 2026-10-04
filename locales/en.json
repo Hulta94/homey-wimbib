@@ -1,1 +1,46 @@
-{}
+{
+  "desc": {
+    "leak_alarm": "Leak alarm",
+    "burst_alarm": "Burst alarm",
+    "dry_alarm": "Dry alarm",
+    "reverse_alarm": "Reverse alarm",
+
+    "total_volume": "Total volume",
+    "target_volume": "Target volume",
+    "flow_actual": "Flow actual",
+
+    "max_flow_day": "Max flow day",
+    "max_flow_month": "Max flow month",
+    "max_flow_year": "Max flow year",
+
+    "min_flow_day": "Min flow day",
+    "min_flow_month": "Min flow month",
+
+    "volume_weighted_water_temp_day": "Vol. weighted water temp day",
+    "volume_weighted_water_temp_month": "Vol. weighted water temp month",
+
+    "max_water_temp_day": "Max water temp day",
+    "max_water_temp_month": "Max water temp month",
+    "max_water_temp_year": "Max water temp year",
+
+    "min_water_temp_day": "Min water temp day",
+    "min_water_temp_month": "Min water temp month",
+    "min_water_temp_year": "Min water temp year",
+
+    "time_weighted_meter_temp_day": "Time weighted meter temp day",
+    "max_meter_temp_month": "Max meter temp month",
+    "max_meter_temp_year": "Max meter temp year",
+
+    "min_meter_temp_day": "Min meter temp day",
+    "min_meter_temp_month": "Min meter temp month",
+    "min_meter_temp_year": "Min meter temp year",
+
+    "instantaneous_flow_temp": "Instantaneous water temperature",
+
+    "wifi_rssi": "Wi-Fi RSSI",
+    "wmbus_rssi": "wM-Bus RSSI"
+  },
+  "error": {
+    "unreachable": "Unable to reach the wimbib"
+  }
+}

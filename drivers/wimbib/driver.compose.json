@@ -3,8 +3,13 @@
     "en": "wimbib"
   },
   "class": "sensor",
-  "capabilities": [],
-  "capabilitiesOptions": {},
+  "capabilities": [
+  ],
+  "capabilitiesOptions": {
+  },
+  "energy": {
+    "cumulative": true
+  },
   "discovery": "wimbib",
   "platforms": [
     "local"

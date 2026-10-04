@@ -1,0 +1,14 @@
+{
+  "highlight": true,
+  "title": {
+    "en": "Burst alarm",
+    "sv": "Spricklarm"
+  },
+  "args": [
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=wimbib"
+    }
+  ]
+}

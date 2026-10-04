@@ -32,6 +32,81 @@
   "source": "https://github.com/remne/homey-wimbib",
   "homepage": "https://remne.tech",
   "brandColor": "#0d47a2",
+  "flow": {
+    "triggers": [
+      {
+        "highlight": true,
+        "title": {
+          "en": "Burst alarm",
+          "sv": "Spricklarm"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=wimbib"
+          }
+        ],
+        "id": "alarm_water.burst_true"
+      },
+      {
+        "highlight": true,
+        "title": {
+          "en": "Dry alarm",
+          "sv": "Torrlarm"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=wimbib"
+          }
+        ],
+        "id": "alarm_water.dry_true"
+      },
+      {
+        "highlight": true,
+        "title": {
+          "en": "Reverse alarm",
+          "sv": "Backflödeslarm"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=wimbib"
+          }
+        ],
+        "id": "alarm_water.reverse_true"
+      },
+      {
+        "highlight": true,
+        "title": {
+          "en": "Target volume changed",
+          "sv": "Målvolym ändrad"
+        },
+        "tokens": [
+          {
+            "name": "meter_water.target",
+            "title": {
+              "en": "Target volume",
+              "sv": "Målvolym"
+            },
+            "type": "number",
+            "example": 25
+          }
+        ],
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=wimbib"
+          }
+        ],
+        "id": "meter_water.target_changed"
+      }
+    ]
+  },
   "drivers": [
     {
       "name": {
@@ -40,6 +115,9 @@
       "class": "sensor",
       "capabilities": [],
       "capabilitiesOptions": {},
+      "energy": {
+        "cumulative": true
+      },
       "discovery": "wimbib",
       "platforms": [
         "local"
