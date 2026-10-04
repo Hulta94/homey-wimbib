@@ -8,6 +8,8 @@ const POLL_INTERVAL = 10000;
 const REQUEST_TIMEOUT = 15000;
 // Consecutive failed polls before the device is marked unavailable
 const MAX_FAILED_POLLS = 3;
+// Hourly meter readings kept for the dashboard widget
+const HISTORY_HOURS = 24;
 
 // m³/h -> L/min, the unit Homey uses for measure_water
 const M3H_TO_LMIN = 1000 / 60;
@@ -141,6 +143,7 @@ module.exports = class WimbibDevice extends Homey.Device {
       // The wimbib often sits on weak Wi-Fi, only go unavailable when it stays unreachable
       if (this.failedPolls >= MAX_FAILED_POLLS) {
         await this.setUnavailable(this.homey.__('error.unreachable')).catch(this.error);
+        this.emitWidgetUpdate();
       }
       return;
     }
@@ -155,6 +158,75 @@ module.exports = class WimbibDevice extends Homey.Device {
     await this.setAvailable().catch(this.error);
     await this.applyMetrics(meterData.meter);
     await this.applyMetrics(meterData.info);
+
+    this.lastUpdate = Date.now();
+    await this.recordHistory().catch(this.error);
+    this.emitWidgetUpdate();
+  }
+
+  /**
+   * Keeps the meter reading at the start of each hour (last 24 h) and at local midnight,
+   * so the widget can show hourly use and today's use without Insights access.
+   */
+  async recordHistory() {
+    const total = this.getCapabilityValueOrNull('meter_water');
+    if (typeof total !== 'number') {
+      return;
+    }
+
+    const now = new Date();
+    const hourStart = new Date(now);
+    hourStart.setUTCMinutes(0, 0, 0);
+
+    const hourly = this.getStoreValue('hourly') || [];
+    const lastEntry = hourly[hourly.length - 1];
+    if (!lastEntry || lastEntry.t !== hourStart.toISOString()) {
+      hourly.push({ t: hourStart.toISOString(), v: total });
+      await this.setStoreValue('hourly', hourly.slice(-HISTORY_HOURS));
+    }
+
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: this.homey.clock.getTimezone() }).format(now);
+    const dayStart = this.getStoreValue('dayStart');
+    if (!dayStart || dayStart.date !== today) {
+      await this.setStoreValue('dayStart', { date: today, v: total });
+    }
+  }
+
+  getWidgetData() {
+    const total = this.getCapabilityValueOrNull('meter_water');
+    const dayStart = this.getStoreValue('dayStart');
+    const hourly = this.getStoreValue('hourly') || [];
+    const toLitres = (from, to) => Math.max(0, Math.round((to - from) * 1000));
+
+    return {
+      id: this.getData().id,
+      name: this.getName(),
+      available: this.getAvailable(),
+      lastUpdate: this.lastUpdate || null,
+      total,
+      todayLitres: typeof total === 'number' && dayStart ? toLitres(dayStart.v, total) : null,
+      flow: this.getCapabilityValueOrNull('measure_water'),
+      maxFlowDay: this.getCapabilityValueOrNull('measure_water.max_flow_day'),
+      wifiRssi: this.getCapabilityValueOrNull('measure_signal_strength.wifi'),
+      alarms: {
+        leak: this.getCapabilityValueOrNull('alarm_water'),
+        burst: this.getCapabilityValueOrNull('alarm_water.burst'),
+        dry: this.getCapabilityValueOrNull('alarm_water.dry'),
+        reverse: this.getCapabilityValueOrNull('alarm_water.reverse'),
+      },
+      // Use per hour; the current hour runs up to the latest reading
+      hourly: typeof total === 'number'
+        ? hourly.map((entry, i) => ({ t: entry.t, litres: toLitres(entry.v, i + 1 < hourly.length ? hourly[i + 1].v : total) }))
+        : [],
+    };
+  }
+
+  emitWidgetUpdate() {
+    Promise.resolve(this.homey.api.realtime('wimbib:update', this.getWidgetData())).catch(this.error);
+  }
+
+  getCapabilityValueOrNull(capability) {
+    return this.hasCapability(capability) ? this.getCapabilityValue(capability) : null;
   }
 
   async applyMetrics(metrics) {

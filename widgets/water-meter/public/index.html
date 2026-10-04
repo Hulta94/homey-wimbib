@@ -1,0 +1,157 @@
+<html>
+  <head>
+    <style>
+      .wm {
+        --wm-text: var(--homey-text-color, #1a1d21);
+        --wm-muted: var(--homey-text-color-light, #8a8f98);
+        --wm-accent: var(--homey-color-blue-500, #2b7bd6);
+        --wm-line: var(--homey-line-color, rgba(128, 128, 128, 0.22));
+        --wm-ok: var(--homey-color-green-500, #2f9e5b);
+        --wm-warn: var(--homey-color-orange-500, #e08a00);
+        --wm-bad: var(--homey-color-red-500, #d93d33);
+        color: var(--wm-text);
+        display: grid;
+        gap: 10px;
+        padding: 2px 4px;
+      }
+      .wm-head, .wm-main, .wm-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+      .wm-name { font-size: 13px; color: var(--wm-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .wm-status { font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+      .wm-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+      .wm-status.ok { color: var(--wm-ok); }
+      .wm-status.warn { color: var(--wm-warn); }
+      .wm-status.bad { color: var(--wm-bad); }
+      .wm-today { display: grid; }
+      .wm-big { font-size: 30px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+      .wm-big small { font-size: 15px; font-weight: 500; color: var(--wm-muted); margin-left: 3px; }
+      .wm-label { font-size: 12px; color: var(--wm-muted); }
+      .wm-side { display: grid; justify-items: end; gap: 2px; text-align: right; }
+      .wm-total { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 15px; font-variant-numeric: tabular-nums; }
+      .wm-total .red { color: var(--wm-bad); }
+      .wm-chart { display: flex; align-items: flex-end; gap: 2px; height: 64px; border-bottom: 1px solid var(--wm-line); }
+      .wm-chart i { flex: 1; min-height: 1px; background: var(--wm-accent); border-radius: 2px 2px 0 0; opacity: 0.85; }
+      .wm-chart i.zero { background: var(--wm-line); opacity: 1; }
+      .wm-chart i.now { opacity: 0.45; }
+      .wm-ticks { display: flex; justify-content: space-between; font-size: 10px; color: var(--wm-muted); margin-top: -6px; font-variant-numeric: tabular-nums; }
+      .wm-foot { font-size: 11px; color: var(--wm-muted); }
+      .wm-empty { font-size: 13px; color: var(--wm-muted); text-align: center; padding: 40px 8px; }
+    </style>
+  </head>
+
+  <body class="homey-widget">
+    <div class="wm" id="wm">
+      <div class="wm-empty" id="empty">…</div>
+    </div>
+
+    <script type="text/javascript">
+      const TEXT = {
+        en: {
+          today: 'used today', since: 'since midnight', flow: 'Flow', maxFlow: 'Max flow today',
+          online: 'Online', offline: 'Offline', noDevice: 'Add a wimbib device to see your water use.',
+          noData: 'Waiting for the first reading…', updated: 'Updated', hours: 'Last 24 h',
+          alarm: { leak: 'Leak alarm', burst: 'Burst alarm', dry: 'Dry alarm', reverse: 'Reverse flow' },
+          signal: { good: 'Good Wi-Fi', fair: 'Fair Wi-Fi', weak: 'Weak Wi-Fi', poor: 'Poor Wi-Fi' },
+        },
+        sv: {
+          today: 'förbrukat idag', since: 'sedan midnatt', flow: 'Flöde', maxFlow: 'Maxflöde idag',
+          online: 'Ansluten', offline: 'Ej ansluten', noDevice: 'Lägg till en wimbib-enhet för att se din vattenförbrukning.',
+          noData: 'Väntar på första avläsningen…', updated: 'Uppdaterad', hours: 'Senaste 24 h',
+          alarm: { leak: 'Läcklarm', burst: 'Spricklarm', dry: 'Torrlarm', reverse: 'Backflöde' },
+          signal: { good: 'Bra Wi-Fi', fair: 'Okej Wi-Fi', weak: 'Svag Wi-Fi', poor: 'Dålig Wi-Fi' },
+        },
+      };
+      let t = TEXT.en;
+      let lang = 'en';
+      let device = null;
+
+      const root = document.getElementById('wm');
+      const fmt = (n, d) => n == null ? '–' : Number(n).toLocaleString(lang === 'sv' ? 'sv-SE' : 'en-GB', { minimumFractionDigits: d, maximumFractionDigits: d });
+      const clock = (ms) => new Date(ms).toLocaleTimeString(lang === 'sv' ? 'sv-SE' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
+      const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+      function signal(rssi) {
+        if (rssi == null) return '';
+        if (rssi >= -60) return t.signal.good;
+        if (rssi >= -70) return t.signal.fair;
+        if (rssi >= -80) return t.signal.weak;
+        return t.signal.poor;
+      }
+
+      function status(d) {
+        const active = Object.keys(t.alarm).filter((k) => d.alarms && d.alarms[k] === true);
+        if (active.length) return { cls: 'bad', text: active.map((k) => t.alarm[k]).join(', ') };
+        if (!d.available) return { cls: 'warn', text: t.offline };
+        return { cls: 'ok', text: t.online };
+      }
+
+      function litres(l) {
+        if (l == null) return '–';
+        if (l >= 1000) return fmt(l / 1000, 2) + '<small>m³</small>';
+        return fmt(l, 0) + '<small>L</small>';
+      }
+
+      function register(total) {
+        if (total == null) return '–';
+        const [whole, dec] = Number(total).toFixed(3).split('.');
+        return whole + '.<span class="red">' + dec + '</span> m³';
+      }
+
+      function chart(hourly) {
+        const max = Math.max(1, ...hourly.map((h) => h.litres));
+        const bars = hourly.map((h, i) => {
+          const pct = (h.litres / max) * 100;
+          const cls = h.litres === 0 ? 'zero' : (i === hourly.length - 1 ? 'now' : '');
+          return '<i class="' + cls + '" style="height:' + Math.max(2, pct) + '%" title="' + clock(Date.parse(h.t)) + ' · ' + h.litres + ' L"></i>';
+        }).join('');
+        const first = hourly.length ? clock(Date.parse(hourly[0].t)) : '';
+        return '<div class="wm-chart">' + bars + '</div>'
+          + '<div class="wm-ticks"><span>' + first + '</span><span>' + t.hours + '</span><span>' + clock(Date.now()) + '</span></div>';
+      }
+
+      function render() {
+        if (!device) {
+          root.innerHTML = '<div class="wm-empty">' + t.noDevice + '</div>';
+          return;
+        }
+        const d = device;
+        const s = status(d);
+        const flowRow = d.flow != null
+          ? t.flow + ' ' + fmt(d.flow, 1) + ' L/min'
+          : (d.maxFlowDay != null ? t.maxFlow + ' ' + fmt(d.maxFlowDay, 1) + ' L/min' : '');
+
+        root.innerHTML = ''
+          + '<div class="wm-head"><span class="wm-name">' + esc(d.name) + '</span><span class="wm-status ' + s.cls + '">' + esc(s.text) + '</span></div>'
+          + '<div class="wm-main">'
+          + '<div class="wm-today"><span class="wm-big">' + litres(d.todayLitres) + '</span><span class="wm-label">' + t.today + '</span></div>'
+          + '<div class="wm-side"><span class="wm-total">' + register(d.total) + '</span><span class="wm-label">' + flowRow + '</span></div>'
+          + '</div>'
+          + (d.hourly && d.hourly.length ? chart(d.hourly) : '<div class="wm-empty" style="padding:20px 8px">' + t.noData + '</div>')
+          + '<div class="wm-foot"><span>' + (d.lastUpdate ? t.updated + ' ' + clock(d.lastUpdate) : '') + '</span><span>' + signal(d.wifiRssi) + '</span></div>';
+      }
+
+      function apply(result) {
+        lang = result.language === 'sv' ? 'sv' : 'en';
+        t = TEXT[lang];
+        device = (result.devices && result.devices[0]) || null;
+        render();
+      }
+
+      function onHomeyReady(Homey) {
+        const load = () => Homey.api('GET', '/', {}).then(apply).catch((err) => {
+          root.innerHTML = '<div class="wm-empty">' + esc(err && err.message ? err.message : err) + '</div>';
+        });
+
+        load().finally(() => Homey.ready());
+
+        // Live updates after every poll, with a slow refresh as fallback
+        Homey.on('wimbib:update', (data) => {
+          if (!device || data.id === device.id) {
+            device = data;
+            render();
+          }
+        });
+        setInterval(load, 60 * 1000);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": {
+    "en": "Water meter",
+    "sv": "Vattenmätare"
+  },
+  "height": 220,
+  "settings": [],
+  "api": {
+    "getData": {
+      "method": "GET",
+      "path": "/"
+    }
+  }
+}
