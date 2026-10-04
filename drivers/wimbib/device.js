@@ -3,6 +3,12 @@
 const Homey = require('homey');
 const got = require('got');
 
+const POLL_INTERVAL = 10000;
+// The wimbib can take several seconds to answer the first request after being idle
+const REQUEST_TIMEOUT = 15000;
+// Consecutive failed polls before the device is marked unavailable
+const MAX_FAILED_POLLS = 3;
+
 // m³/h -> L/min, the unit Homey uses for measure_water
 const M3H_TO_LMIN = 1000 / 60;
 
@@ -74,13 +80,16 @@ module.exports = class WimbibDevice extends Homey.Device {
     this.log('wimbib address:', settings.wimbib_address);
     this.address = settings.wimbib_address;
 
-    await this.migrateCapabilities();
+    this.failedPolls = 0;
+    this.updating = false;
+
+    await this.migrateCapabilities().catch(this.error);
 
     await this.update();
 
     this.pollTimeout = this.homey.setInterval(async () => {
       await this.update();
-    }, 10000);
+    }, POLL_INTERVAL);
   }
 
   /**
@@ -103,27 +112,49 @@ module.exports = class WimbibDevice extends Homey.Device {
   }
 
   async update() {
+    // A slow response can outlast the poll interval, don't stack requests
+    if (this.updating) {
+      return;
+    }
+    this.updating = true;
+
+    try {
+      await this.poll();
+    } catch (error) {
+      this.error('Error while updating capabilities', error);
+    } finally {
+      this.updating = false;
+    }
+  }
+
+  async poll() {
     const url = `http://${this.address}/meterData`;
-    this.log('fetching data from:', url);
 
     let meterData;
     try {
-      const response = await got(url);
+      const response = await got(url, { timeout: REQUEST_TIMEOUT, retry: 0 });
       meterData = JSON.parse(response.body);
     } catch (error) {
-      this.error('Error caught while getting meterData', error);
-      await this.setUnavailable(this.homey.__('error.unreachable')).catch(this.error);
+      this.failedPolls++;
+      this.error(`Failed to get meterData from ${url} (${this.failedPolls} in a row):`, error.message);
+
+      // The wimbib often sits on weak Wi-Fi, only go unavailable when it stays unreachable
+      if (this.failedPolls >= MAX_FAILED_POLLS) {
+        await this.setUnavailable(this.homey.__('error.unreachable')).catch(this.error);
+      }
       return;
     }
+
+    this.failedPolls = 0;
 
     if (meterData == null) {
       this.error('meterData response was empty');
       return;
     }
 
+    await this.setAvailable().catch(this.error);
     await this.applyMetrics(meterData.meter);
     await this.applyMetrics(meterData.info);
-    await this.setAvailable().catch(this.error);
   }
 
   async applyMetrics(metrics) {
