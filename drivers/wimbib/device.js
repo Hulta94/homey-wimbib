@@ -8,6 +8,9 @@ const POLL_INTERVAL = 10000;
 const REQUEST_TIMEOUT = 15000;
 // Consecutive failed polls before the device is marked unavailable
 const MAX_FAILED_POLLS = 3;
+// Longest time between two meter messages to estimate flow from
+const MAX_FLOW_ESTIMATE_GAP = 15 * 60 * 1000;
+
 // Hourly meter readings kept for the dashboard widget
 const HISTORY_HOURS = 24;
 
@@ -161,10 +164,41 @@ module.exports = class WimbibDevice extends Homey.Device {
     await this.setAvailable().catch(this.error);
     await this.applyMetrics(meterData.meter);
     await this.applyMetrics(meterData.info);
+    await this.estimateFlow(meterData);
 
     this.lastUpdate = Date.now();
     await this.recordHistory().catch(this.error);
     this.emitWidgetUpdate();
+  }
+
+  /**
+   * Some meters (e.g. Kamstrup flowIQ 2200) don't send actual flow. Estimate it from how much
+   * the volume grew between two meter messages, which arrive about every 1.5 minutes.
+   * The wimbib's message counter tells when a new message has arrived, also when no water ran.
+   */
+  async estimateFlow(meterData) {
+    const meter = meterData.meter || {};
+    const messages = meterData.info && meterData.info.crc_ok_cnt;
+    if ('flow_actual' in meter || typeof meter.total_volume !== 'number' || typeof messages !== 'number') {
+      return;
+    }
+
+    const previous = this.flowSample;
+    if (previous && messages === previous.messages) {
+      return;
+    }
+
+    const now = Date.now();
+    this.flowSample = { messages, t: now, volume: meter.total_volume };
+
+    // Skip the first message, a restarted wimbib (counter went back) and long radio gaps
+    if (!previous || messages < previous.messages || now - previous.t > MAX_FLOW_ESTIMATE_GAP) {
+      return;
+    }
+
+    const hours = (now - previous.t) / 3600000;
+    const flow = Math.max(0, meter.total_volume - previous.volume) / hours;
+    await this.applyMetrics({ flow_actual: flow });
   }
 
   /**
@@ -275,7 +309,7 @@ module.exports = class WimbibDevice extends Homey.Device {
       }
 
       const { capability } = metricInfo;
-      const value = metricInfo.scale ? metrics[metricKey] * metricInfo.scale : metrics[metricKey];
+      const value = metricInfo.scale ? Math.round(metrics[metricKey] * metricInfo.scale * 100) / 100 : metrics[metricKey];
 
       if (!this.hasCapability(capability)) {
         await this.addCapability(capability);
