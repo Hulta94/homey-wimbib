@@ -15,37 +15,39 @@
         padding: 2px 4px;
       }
       .wm-head, .wm-main, .wm-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-      .wm-name { font-size: 13px; color: var(--wm-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .wm-status { font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-      .wm-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+      .wm-name { font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .wm-status { font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+      .wm-status::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
       .wm-status.ok { color: var(--wm-ok); }
       .wm-status.warn { color: var(--wm-warn); }
       .wm-status.bad { color: var(--wm-bad); }
       .wm-today { display: grid; }
-      .wm-big { font-size: 30px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
-      .wm-big small { font-size: 15px; font-weight: 500; color: var(--wm-muted); margin-left: 3px; }
-      .wm-label { font-size: 12px; color: var(--wm-muted); }
+      .wm-big { font-size: 40px; font-weight: 700; line-height: 1.05; font-variant-numeric: tabular-nums; }
+      .wm-big small { font-size: 20px; font-weight: 500; color: var(--wm-muted); margin-left: 4px; }
+      .wm-label { font-size: 15px; color: var(--wm-muted); }
       .wm-side { display: grid; justify-items: end; gap: 2px; text-align: right; }
-      .wm-total { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 15px; font-variant-numeric: tabular-nums; }
+      .wm-total { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 18px; font-variant-numeric: tabular-nums; }
       .wm-total .red { color: var(--wm-bad); }
 
-      .wm-periods { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-      .wm-period { display: grid; gap: 1px; padding: 6px 8px; border-radius: 8px; background: var(--wm-line); min-width: 0; }
-      .wm-period b { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-      .wm-period b small { font-size: 11px; font-weight: 500; color: var(--wm-muted); margin-left: 2px; }
-      .wm-period span { font-size: 11px; color: var(--wm-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .wm-periods { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+      .wm-period { display: grid; gap: 2px; padding: 8px 8px; border-radius: 10px; background: var(--wm-line); min-width: 0; }
+      .wm-period b { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .wm-period b small { font-size: 14px; font-weight: 500; color: var(--wm-muted); margin-left: 2px; }
+      .wm-period b small.wm-min, .wm-big small.wm-min { margin: 0 2px 0 0; }
+      .wm-period span { font-size: 14px; color: var(--wm-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-      .wm-chart { display: flex; align-items: stretch; gap: 1px; height: 92px; border-bottom: 1px solid var(--wm-line); }
-      .wm-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 2px; }
-      .wm-col em { font-style: normal; font-size: 9px; line-height: 1; color: var(--wm-muted); font-variant-numeric: tabular-nums; writing-mode: vertical-rl; transform: rotate(180deg); }
-      .wm-col.peak em { color: var(--wm-text); font-weight: 600; }
-      .wm-col i { display: block; width: 100%; max-width: 12px; background: var(--wm-accent); border-radius: 2px 2px 0 0; opacity: 0.85; }
-      .wm-col i.zero { background: var(--wm-line); opacity: 1; }
-      .wm-col.now i { opacity: 0.45; }
-      .wm-hours { display: flex; gap: 1px; margin-top: -6px; }
-      .wm-hours span { flex: 1; min-width: 0; text-align: center; font-size: 9px; color: var(--wm-muted); font-variant-numeric: tabular-nums; }
-      .wm-foot { font-size: 11px; color: var(--wm-muted); }
-      .wm-empty { font-size: 13px; color: var(--wm-muted); text-align: center; padding: 40px 8px; }
+      .wm-chart-title { font-size: 14px; color: var(--wm-muted); }
+      .wm-chart { display: flex; align-items: stretch; gap: 3px; height: 104px; border-bottom: 1px solid var(--wm-line); }
+      .wm-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; }
+      .wm-col em { font-style: normal; font-size: 13px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .wm-col em.zero { color: var(--wm-muted); font-weight: 400; }
+      .wm-col i { display: block; width: 100%; max-width: 22px; background: var(--wm-accent); border-radius: 3px 3px 0 0; }
+      .wm-col i.zero { background: var(--wm-line); }
+      .wm-col.now i { opacity: 0.5; }
+      .wm-hours { display: flex; gap: 3px; margin-top: -4px; }
+      .wm-hours span { flex: 1; min-width: 0; text-align: center; font-size: 13px; color: var(--wm-muted); font-variant-numeric: tabular-nums; }
+      .wm-foot { font-size: 14px; color: var(--wm-muted); }
+      .wm-empty { font-size: 16px; color: var(--wm-muted); text-align: center; padding: 40px 8px; }
     </style>
   </head>
 
@@ -60,7 +62,7 @@
           today: 'used today', flow: 'Flow', maxFlow: 'Max flow today',
           yesterday: 'Yesterday', thisMonth: 'This month', lastMonth: 'Last month', partial: 'partial',
           online: 'Online', offline: 'Offline', noDevice: 'Add a wimbib device to see your water use.',
-          noData: 'Hourly use appears after the first full hour.', updated: 'Updated', perHour: 'L per hour',
+          noData: 'Hourly use appears after the first full hour.', updated: 'Updated', perHour: 'Litres per hour, last 12 h',
           alarm: { leak: 'Leak alarm', burst: 'Burst alarm', dry: 'Dry alarm', reverse: 'Reverse flow' },
           signal: { good: 'Good Wi-Fi', fair: 'Fair Wi-Fi', weak: 'Weak Wi-Fi', poor: 'Poor Wi-Fi' },
         },
@@ -68,7 +70,7 @@
           today: 'förbrukat idag', flow: 'Flöde', maxFlow: 'Maxflöde idag',
           yesterday: 'Igår', thisMonth: 'Denna månad', lastMonth: 'Förra månaden', partial: 'ofullständig',
           online: 'Ansluten', offline: 'Ej ansluten', noDevice: 'Lägg till en wimbib-enhet för att se din vattenförbrukning.',
-          noData: 'Förbrukning per timme visas efter första hela timmen.', updated: 'Uppdaterad', perHour: 'L per timme',
+          noData: 'Förbrukning per timme visas efter första hela timmen.', updated: 'Uppdaterad', perHour: 'Liter per timme, senaste 12 h',
           alarm: { leak: 'Läcklarm', burst: 'Spricklarm', dry: 'Torrlarm', reverse: 'Backflöde' },
           signal: { good: 'Bra Wi-Fi', fair: 'Okej Wi-Fi', weak: 'Svag Wi-Fi', poor: 'Dålig Wi-Fi' },
         },
@@ -103,7 +105,7 @@
       // Volume with unit; a partial period (not seen from its start) is shown as "at least"
       function volume(p) {
         if (!p || p.litres == null) return '–';
-        const prefix = p.partial ? '≥ ' : '';
+        const prefix = p.partial ? '<small class="wm-min">≥</small>' : '';
         if (p.litres >= 1000) return prefix + fmt(p.litres / 1000, 2) + '<small>m³</small>';
         return prefix + fmt(p.litres, 0) + '<small>L</small>';
       }
@@ -121,16 +123,16 @@
 
       function chart(hourly) {
         const max = Math.max(1, ...hourly.map((h) => h.litres));
-        const peak = hourly.reduce((a, b) => (b.litres > a.litres ? b : a), hourly[0]);
         const cols = hourly.map((h, i) => {
-          const cls = 'wm-col' + (i === hourly.length - 1 ? ' now' : '') + (h === peak && h.litres > 0 ? ' peak' : '');
-          const height = Math.max(2, (h.litres / max) * 62);
-          return '<div class="' + cls + '" title="' + clock(Date.parse(h.t)) + ' · ' + h.litres + ' L">'
-            + '<em>' + h.litres + '</em>'
-            + '<i class="' + (h.litres === 0 ? 'zero' : '') + '" style="height:' + height + 'px"></i></div>';
+          const zero = h.litres === 0 ? 'zero' : '';
+          const height = Math.max(3, (h.litres / max) * 72);
+          return '<div class="wm-col' + (i === hourly.length - 1 ? ' now' : '') + '" title="' + clock(Date.parse(h.t)) + ' · ' + h.litres + ' L">'
+            + '<em class="' + zero + '">' + h.litres + '</em>'
+            + '<i class="' + zero + '" style="height:' + height + 'px"></i></div>';
         }).join('');
-        const hours = hourly.map((h, i) => '<span>' + (i % 3 === 0 ? hour(Date.parse(h.t)) : '') + '</span>').join('');
-        return '<div class="wm-chart" aria-label="' + t.perHour + '">' + cols + '</div><div class="wm-hours">' + hours + '</div>';
+        const hours = hourly.map((h) => '<span>' + hour(Date.parse(h.t)) + '</span>').join('');
+        return '<div class="wm-chart-title">' + t.perHour + '</div>'
+          + '<div class="wm-chart">' + cols + '</div><div class="wm-hours">' + hours + '</div>';
       }
 
       function render() {
@@ -143,7 +145,7 @@
         const flowRow = d.flow != null
           ? t.flow + ' ' + fmt(d.flow, 1) + ' L/min'
           : (d.maxFlowDay != null ? t.maxFlow + ' ' + fmt(d.maxFlowDay, 1) + ' L/min' : '');
-        const hourly = (d.hourly || []).slice(-24);
+        const hourly = (d.hourly || []).slice(-12);
 
         root.innerHTML = ''
           + '<div class="wm-head"><span class="wm-name">' + esc(d.name) + '</span><span class="wm-status ' + s.cls + '">' + esc(s.text) + '</span></div>'
