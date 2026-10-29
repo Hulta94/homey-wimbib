@@ -320,14 +320,14 @@ module.exports = class WimbibDevice extends Homey.Device {
       await this.setCapabilityValue(capability, value);
 
       if (metricInfo.triggerOnTrue && value === true && previousValue !== true) {
-        await this.homey.flow.getTriggerCard(metricInfo.triggerOnTrue)
-          .trigger({}, { device: this })
+        await this.homey.flow.getDeviceTriggerCard(metricInfo.triggerOnTrue)
+          .trigger(this)
           .catch(this.error);
       }
 
       if (metricInfo.triggerOnChange && previousValue != null && value !== previousValue) {
-        await this.homey.flow.getTriggerCard(metricInfo.triggerOnChange)
-          .trigger({ [capability]: value }, { device: this })
+        await this.homey.flow.getDeviceTriggerCard(metricInfo.triggerOnChange)
+          .trigger(this, { [capability]: value })
           .catch(this.error);
       }
     }

@@ -35,6 +35,7 @@
   "flow": {
     "triggers": [
       {
+        "id": "alarm_water.burst_true",
         "highlight": true,
         "title": {
           "en": "Burst alarm",
@@ -46,10 +47,10 @@
             "name": "device",
             "filter": "driver_id=wimbib"
           }
-        ],
-        "id": "alarm_water.burst_true"
+        ]
       },
       {
+        "id": "alarm_water.dry_true",
         "highlight": true,
         "title": {
           "en": "Dry alarm",
@@ -61,10 +62,10 @@
             "name": "device",
             "filter": "driver_id=wimbib"
           }
-        ],
-        "id": "alarm_water.dry_true"
+        ]
       },
       {
+        "id": "alarm_water.reverse_true",
         "highlight": true,
         "title": {
           "en": "Reverse alarm",
@@ -76,35 +77,10 @@
             "name": "device",
             "filter": "driver_id=wimbib"
           }
-        ],
-        "id": "alarm_water.reverse_true"
+        ]
       },
       {
-        "title": {
-          "en": "Actual flow changed",
-          "sv": "Aktuellt flöde ändrat"
-        },
-        "tokens": [
-          {
-            "name": "measure_water",
-            "title": {
-              "en": "Actual flow",
-              "sv": "Aktuellt flöde"
-            },
-            "type": "number",
-            "example": 12.5
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=wimbib"
-          }
-        ],
-        "id": "measure_water.actual_changed"
-      },
-      {
+        "id": "meter_water.target_changed",
         "highlight": true,
         "title": {
           "en": "Target volume changed",
@@ -127,12 +103,37 @@
             "name": "device",
             "filter": "driver_id=wimbib"
           }
+        ]
+      },
+      {
+        "id": "measure_water.actual_changed",
+        "title": {
+          "en": "Actual flow changed",
+          "sv": "Aktuellt flöde ändrat"
+        },
+        "tokens": [
+          {
+            "name": "measure_water",
+            "title": {
+              "en": "Actual flow",
+              "sv": "Aktuellt flöde"
+            },
+            "type": "number",
+            "example": 12.5
+          }
         ],
-        "id": "meter_water.target_changed"
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=wimbib"
+          }
+        ]
       }
     ],
     "conditions": [
       {
+        "id": "measure_water.actual_above",
         "title": {
           "en": "Actual flow !{{is|is not}} above",
           "sv": "Aktuellt flöde !{{är|är inte}} över"
@@ -157,8 +158,7 @@
               "sv": "L/min"
             }
           }
-        ],
-        "id": "measure_water.actual_above"
+        ]
       }
     ]
   },

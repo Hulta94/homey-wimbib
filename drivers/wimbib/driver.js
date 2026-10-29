@@ -28,25 +28,8 @@ module.exports = class WimbibDriver extends Homey.Driver {
       this.handleDiscoveryResult(discoveryResult);
     });
 
-    this.registerFlowTriggers();
-  }
-
-  // App-level trigger cards (.homeycompose/flow/triggers) with a device argument,
-  // fired from WimbibDevice with the device in the state
-  registerFlowTriggers() {
-    const triggerIds = [
-      'alarm_water.burst_true',
-      'alarm_water.dry_true',
-      'alarm_water.reverse_true',
-      'meter_water.target_changed',
-      'measure_water.actual_changed',
-    ];
-
-    for (const triggerId of triggerIds) {
-      this.homey.flow.getTriggerCard(triggerId)
-        .registerRunListener(async (args, state) => args.device.getData().id === state.device.getData().id);
-    }
-
+    // Flow cards are defined in driver.flow.compose.json. The device triggers are fired
+    // from WimbibDevice, Homey picks the flows that belong to that device.
     this.homey.flow.getConditionCard('measure_water.actual_above')
       .registerRunListener(async args => args.device.getCapabilityValue('measure_water') > args.flow);
   }

@@ -1,0 +1,90 @@
+{
+  "triggers": [
+    {
+      "id": "alarm_water.burst_true",
+      "highlight": true,
+      "title": {
+        "en": "Burst alarm",
+        "sv": "Spricklarm"
+      }
+    },
+    {
+      "id": "alarm_water.dry_true",
+      "highlight": true,
+      "title": {
+        "en": "Dry alarm",
+        "sv": "Torrlarm"
+      }
+    },
+    {
+      "id": "alarm_water.reverse_true",
+      "highlight": true,
+      "title": {
+        "en": "Reverse alarm",
+        "sv": "Backflödeslarm"
+      }
+    },
+    {
+      "id": "meter_water.target_changed",
+      "highlight": true,
+      "title": {
+        "en": "Target volume changed",
+        "sv": "Målvolym ändrad"
+      },
+      "tokens": [
+        {
+          "name": "meter_water.target",
+          "title": {
+            "en": "Target volume",
+            "sv": "Målvolym"
+          },
+          "type": "number",
+          "example": 25
+        }
+      ]
+    },
+    {
+      "id": "measure_water.actual_changed",
+      "title": {
+        "en": "Actual flow changed",
+        "sv": "Aktuellt flöde ändrat"
+      },
+      "tokens": [
+        {
+          "name": "measure_water",
+          "title": {
+            "en": "Actual flow",
+            "sv": "Aktuellt flöde"
+          },
+          "type": "number",
+          "example": 12.5
+        }
+      ]
+    }
+  ],
+  "conditions": [
+    {
+      "id": "measure_water.actual_above",
+      "title": {
+        "en": "Actual flow !{{is|is not}} above",
+        "sv": "Aktuellt flöde !{{är|är inte}} över"
+      },
+      "titleFormatted": {
+        "en": "Actual flow !{{is|is not}} above [[flow]] L/min",
+        "sv": "Aktuellt flöde !{{är|är inte}} över [[flow]] L/min"
+      },
+      "args": [
+        {
+          "type": "number",
+          "name": "flow",
+          "min": 0,
+          "step": 0.1,
+          "placeholder": {
+            "en": "L/min",
+            "sv": "L/min"
+          }
+        }
+      ]
+    }
+  ]
+}
